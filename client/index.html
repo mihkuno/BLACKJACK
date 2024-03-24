@@ -1,0 +1,62 @@
+<html>
+<head>
+    <title>Streamer</title>
+</head>
+<body>
+    <video autoplay></video>
+    <img src="">
+    <script>
+
+        var timestamp  = '0';
+        var card_stack = '';
+
+
+        // get video dom element
+        const video = document.querySelector('video');
+        
+        // get img dom element
+        const img = document.querySelector('img');
+        
+        // request access to webcam
+        navigator.mediaDevices.getUserMedia({video: {width: 426, height: 240}}).then((stream) => video.srcObject = stream);
+        
+
+        // returns a frame encoded in base64
+        const getFrame = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const data = canvas.toDataURL('image/png');
+
+            return timestamp.toString() + ',' + card_stack.toString() + ',' + data;
+        }
+
+        const WS_URL = 'ws://localhost:8000/ws'; // Change this if you serve on different server or port
+        const FPS = 30;
+        const ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => {
+            console.log(`Connected to ${WS_URL}`);
+            
+            setInterval(() => {
+                ws.send(getFrame());
+            }, 1000 / FPS);
+        }
+
+        ws.onmessage = message => {
+
+            if (message.data === '') return;
+
+            data = message.data.split(',');
+            
+            timestamp       = data[0]
+            card_stack      = data.slice(1,-2);
+            const metadata  = data.slice(-2)[0];
+            const bson      = data.slice(-1)[0];
+
+            img.src = metadata + ','+ bson; 
+        }
+    </script>
+</body>
+</html>

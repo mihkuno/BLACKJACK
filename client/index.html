@@ -1,10 +1,19 @@
 <html>
 <head>
     <title>Streamer</title>
+
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
-    <video autoplay></video>
-    <img src="">
+    
+    <div id="container">
+        <video autoplay></video>
+    </div>
+
     <script>
 
         var timestamp  = '0';
@@ -18,7 +27,7 @@
         const img = document.querySelector('img');
         
         // request access to webcam
-        navigator.mediaDevices.getUserMedia({video: {width: 426, height: 240}}).then((stream) => video.srcObject = stream);
+        navigator.mediaDevices.getUserMedia({video: {width: 640, height: 360}}).then((stream) => video.srcObject = stream);
         
 
         // returns a frame encoded in base64
@@ -28,10 +37,9 @@
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
             const data = canvas.toDataURL('image/png');
-
-            return timestamp.toString() + ',' + card_stack.toString() + ',' + data;
+            return data;
         }
-
+        
         const WS_URL = 'ws://localhost:8000/ws'; // Change this if you serve on different server or port
         const FPS = 30;
         const ws = new WebSocket(WS_URL);
@@ -40,22 +48,51 @@
             console.log(`Connected to ${WS_URL}`);
             
             setInterval(() => {
+                const container = document.getElementById('container');
+                // Select all div elements within the parent div
+                var divsToRemove = container.querySelectorAll("div");
+                // Iterate over the div elements and remove them
+                divsToRemove.forEach(function(div) {
+                    div.remove();
+                });
+
+
                 ws.send(getFrame());
-            }, 1000 / FPS);
+            
+            }, 50);
         }
 
         ws.onmessage = message => {
 
-            if (message.data === '') return;
+            const detections = JSON.parse(message.data);
 
-            data = message.data.split(',');
-            
-            timestamp       = data[0]
-            card_stack      = data.slice(1,-2);
-            const metadata  = data.slice(-2)[0];
-            const bson      = data.slice(-1)[0];
+            count = 0;
+            detections.forEach((detection) => {
+                const [x1, y1, x2, y2, name, score] = detection;
+                
+                // create a div element
+                var div = document.createElement('div');
+                
+                // set div style
+                div.style.position = 'absolute';
+                div.style.left = `${x1}px`;
+                div.style.top = `${y1}px`;
+                div.style.width = `${x2 - x1}px`;
+                div.style.height = `${y2 - y1}px`;
+                div.style.border = '3px solid #a29bfe';
+                div.style.backgroundColor = '#a29bfe';
+                div.style.color = 'white';
+                div.style.textAlign = 'center';
+                div.style.fontSize = '8px';
+                div.style.fontWeight = 'bold';
+                div.style.fontFamily = 'segoe ui';
+                div.innerHTML = `${name} ${score * 100}%`;
 
-            img.src = metadata + ','+ bson; 
+                // append div to container
+                container.appendChild(div);
+            });
+
+
         }
     </script>
 </body>

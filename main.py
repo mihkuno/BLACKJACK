@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from starlette.responses import HTMLResponse
 from starlette.websockets import WebSocket
 
-from service.visual_manipulation import detect
+from service.visual_manipulation import detect, from_b64
 
 app = FastAPI()
 
@@ -10,5 +10,5 @@ app = FastAPI()
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     while True:
-        data = await websocket.receive_text()
-        await websocket.send_text( detect(data) )
+        img = await websocket.receive_text()
+        await websocket.send_text( detect(img) )

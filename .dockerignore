@@ -1,0 +1,7 @@
+venv
+node_modules
+__pycache__
+blackjack.yaml
+count.py
+detect.py
+train.py

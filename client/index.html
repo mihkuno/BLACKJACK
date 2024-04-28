@@ -47,26 +47,21 @@
         ws.onopen = () => {
             console.log(`Connected to ${WS_URL}`);
             
-            setInterval(() => {
-                const container = document.getElementById('container');
-                // Select all div elements within the parent div
-                var divsToRemove = container.querySelectorAll("div");
-                // Iterate over the div elements and remove them
-                divsToRemove.forEach(function(div) {
-                    div.remove();
-                });
-
-
-                ws.send(getFrame());
-            
-            }, 50);
+            ws.send(getFrame());
         }
 
         ws.onmessage = message => {
 
+            const container = document.getElementById('container');
+            // Select all div elements within the parent div
+            var divsToRemove = container.querySelectorAll("div");
+            // Iterate over the div elements and remove them
+            divsToRemove.forEach(function(div) {
+                div.remove();
+            });
+
             const detections = JSON.parse(message.data);
 
-            count = 0;
             detections.forEach((detection) => {
                 const [x1, y1, x2, y2, name, score] = detection;
                 
@@ -92,7 +87,7 @@
                 container.appendChild(div);
             });
 
-
+            setTimeout(() => { ws.send(getFrame()); }, 1);
         }
     </script>
 </body>

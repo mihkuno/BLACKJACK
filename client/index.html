@@ -40,13 +40,14 @@
             return data;
         }
         
-        const WS_URL = 'ws://localhost:8000/ws'; // Change this if you serve on different server or port
+        // const WS_URL = 'ws://localhost:8000/ws'; 
+        const WS_URL = 'ws://87.197.146.56:40123/ws'; // Change this if you serve on different server or port
         const FPS = 30;
         const ws = new WebSocket(WS_URL);
 
         ws.onopen = () => {
             console.log(`Connected to ${WS_URL}`);
-            
+        
             ws.send(getFrame());
         }
 
@@ -87,7 +88,7 @@
                 container.appendChild(div);
             });
 
-            setTimeout(() => { ws.send(getFrame()); }, 1);
+            setTimeout(() => { ws.send(getFrame()); }, 10);
         }
     </script>
 </body>

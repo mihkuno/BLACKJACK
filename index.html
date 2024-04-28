@@ -1,0 +1,95 @@
+<html>
+<head>
+    <title>Streamer</title>
+
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="container">
+        <video autoplay></video>
+    </div>
+
+    <script>
+
+        var timestamp  = '0';
+        var card_stack = '';
+
+
+        // get video dom element
+        const video = document.querySelector('video');
+        
+        // get img dom element
+        const img = document.querySelector('img');
+        
+        // request access to webcam
+        navigator.mediaDevices.getUserMedia({video: {width: 640, height: 360}}).then((stream) => video.srcObject = stream);
+        
+
+        // returns a frame encoded in base64
+        const getFrame = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const data = canvas.toDataURL('image/png');
+            return data;
+        }
+        
+        // const WS_URL = 'ws://localhost:8000/ws'; 
+        const WS_URL = 'ws://87.197.146.56:40123/ws'; // Change this if you serve on different server or port
+        const FPS = 30;
+        const ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => {
+            console.log(`Connected to ${WS_URL}`);
+        
+            ws.send(getFrame());
+        }
+
+        ws.onmessage = message => {
+
+            const container = document.getElementById('container');
+            // Select all div elements within the parent div
+            var divsToRemove = container.querySelectorAll("div");
+            // Iterate over the div elements and remove them
+            divsToRemove.forEach(function(div) {
+                div.remove();
+            });
+
+            const detections = JSON.parse(message.data);
+
+            detections.forEach((detection) => {
+                const [x1, y1, x2, y2, name, score] = detection;
+                
+                // create a div element
+                var div = document.createElement('div');
+                
+                // set div style
+                div.style.position = 'absolute';
+                div.style.left = `${x1}px`;
+                div.style.top = `${y1}px`;
+                div.style.width = `${x2 - x1}px`;
+                div.style.height = `${y2 - y1}px`;
+                div.style.border = '3px solid #a29bfe';
+                div.style.backgroundColor = '#a29bfe';
+                div.style.color = 'white';
+                div.style.textAlign = 'center';
+                div.style.fontSize = '8px';
+                div.style.fontWeight = 'bold';
+                div.style.fontFamily = 'segoe ui';
+                div.innerHTML = `${name} ${score * 100}%`;
+
+                // append div to container
+                container.appendChild(div);
+            });
+
+            setTimeout(() => { ws.send(getFrame()); }, 10);
+        }
+    </script>
+</body>
+</html>

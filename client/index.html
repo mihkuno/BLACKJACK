@@ -6,44 +6,128 @@
         body {
             margin: 0;
         }
+
+        #left-info {
+            position: absolute;
+            top: 200;
+            left: 50;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1d1d1d1d;
+            padding: 50;
+        }
     </style>
 </head>
 <body>
     
-    <div id="container">
-        <video autoplay></video>
+    <div>
+        <div id="detection-container">
+            <video id="stream" autoplay width="100%" height="100%"></video>
+        </div>
+        <div id="left-info">
+            <h1 id="card-stack">Card Stack: []</h1>
+            <h1 id="card-count">Card Count: 0 </h1>
+            <h1 id="card-result"></h1>
+            <button onclick="reset()" style="padding: 15 80 15 80; font-size: 14; width: 100%; border-radius: 50px;">Reset</button>
+        </div>
     </div>
+    
 
     <script>
+        
+        var values = {
+            "C10": -2,
+            "D10": -2,
+            "H10": -2,
+            "S10": -2,
+            "C2": 1,
+            "D2": 1,
+            "H2": 1,
+            "S2": 1,
+            "C3": 1,
+            "D3": 1,
+            "H3": 1,
+            "S3": 1,
+            "C4": 2,
+            "D4": 2,
+            "H4": 2,
+            "S4": 2,
+            "C5": 2,
+            "D5": 2,
+            "H5": 2,
+            "S5": 2,
+            "C6": 2,
+            "D6": 2,
+            "H6": 2,
+            "S6": 2,
+            "C7": 1,
+            "D7": 1,
+            "H7": 1,
+            "S7": 1,
+            "C8": 0,
+            "D8": 0,
+            "H8": 0,
+            "S8": 0,
+            "C9": -1,
+            "D9": -1,
+            "H9": -1,
+            "S9": -1,
+            "CA": -2,
+            "DA": -2,
+            "HA": -2,
+            "SA": -2,
+            "CJ": -2,
+            "DJ": -2,
+            "HJ": -2,
+            "SJ": -2,
+            "CK": -2,
+            "DK": -2,
+            "HK": -2,
+            "SK": -2,
+            "CQ": -2,
+            "DQ": -2,
+            "HQ": -2,
+            "SQ": -2
+        }
+        
+        var card_stack_element = document.getElementById('card-stack');
+        var card_count_element = document.getElementById('card-count');
+        var card_result_element = document.getElementById('card-result');
 
-        var timestamp  = '0';
-        var card_stack = '';
+        var card_stack = [];
+        var card_count = 0;
 
+        function reset() {
+            card_stack = []; 
+            card_count = 0;
+            
+            card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
+            card_count_element.innerHTML = `Card Count: ${card_count}`;
+        }
 
         // get video dom element
-        const video = document.querySelector('video');
-        
-        // get img dom element
-        const img = document.querySelector('img');
-        
-        // request access to webcam
-        navigator.mediaDevices.getUserMedia({video: {width: 640, height: 360}}).then((stream) => video.srcObject = stream);
-        
+        var stream = document.getElementById('stream');
 
+        // request access to webcam
+        navigator.mediaDevices.getUserMedia({video: {width: stream.offsetWidth, height: stream.offsetHeight}}).then((frame) => stream.srcObject = frame);
+        
         // returns a frame encoded in base64
         const getFrame = () => {
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.width = stream.offsetWidth;
+            canvas.height = stream.offsetHeight;
+            canvas.getContext('2d').drawImage(stream, 0, 0);
             const data = canvas.toDataURL('image/png');
             return data;
         }
         
         // Change this if you serve on different server or port
-        const WS_URL = 'wss://d2u44vp846a6xw-8000.proxy.runpod.net/ws'; 
+        const WS_URL = 'ws://localhost:8000/ws'
+        // const WS_URL = 'wss://2217o5b2zh9g6g-8000.proxy.runpod.net/ws'; 
         const FPS = 30;
         const ws = new WebSocket(WS_URL);
+
+
 
         ws.onopen = () => {
             console.log(`Connected to ${WS_URL}`);
@@ -53,9 +137,9 @@
 
         ws.onmessage = message => {
 
-            const container = document.getElementById('container');
+            const detection_container = document.getElementById('detection-container');
             // Select all div elements within the parent div
-            var divsToRemove = container.querySelectorAll("div");
+            var divsToRemove = detection_container.querySelectorAll("div");
             // Iterate over the div elements and remove them
             divsToRemove.forEach(function(div) {
                 div.remove();
@@ -66,6 +150,16 @@
             detections.forEach((detection) => {
                 const [x1, y1, x2, y2, name, score] = detection;
                 
+                if (card_count !== null && !card_stack.includes(name)) {
+
+                    const card_value = values[name];
+                    card_count += card_value; 
+                    card_stack.push(name);
+
+                    card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
+                    card_count_element.innerHTML = `Card Count: ${card_count}`;
+                }
+
                 // create a div element
                 var div = document.createElement('div');
                 
@@ -84,10 +178,51 @@
                 div.style.fontFamily = 'segoe ui';
                 div.innerHTML = `${name} ${score * 100}%`;
 
-                // append div to container
-                container.appendChild(div);
+                // append div to detection_container
+                detection_container.appendChild(div);
             });
 
+
+            if (card_count !== null && card_count == 21) {
+                card_result_element.innerHTML = "Blackjack!";
+                card_result_element.style.display = 'block';
+                card_result_element.style.color = 'green';
+                card_count_element.style.display = 'none';
+                card_stack_element.style.display = 'none';
+                
+                setTimeout(() => {
+                    card_stack = []; 
+                    card_count = 0; 
+                    card_count_element.innerHTML = `Card Count: ${card_count}`;
+                    card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
+                    card_count_element.style.display = 'block';
+                    card_stack_element.style.display = 'block';
+                    card_result_element.style.display = 'none';
+                }, 2000);
+                
+                card_count = null;
+            } 
+
+            else if (card_count !== null && card_count > 21) {
+                card_result_element.innerHTML = "Bust!";
+                card_result_element.style.display = 'block';
+                card_result_element.style.color = 'red';
+                card_count_element.style.display = 'none';
+                card_stack_element.style.display = 'none';
+
+                setTimeout(() => {
+                    card_stack = []; 
+                    card_count = 0; 
+                    card_count_element.innerHTML = `Card Count: ${card_count}`;
+                    card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
+                    card_count_element.style.display = 'block';
+                    card_stack_element.style.display = 'block';
+                    card_result_element.style.display = 'none';
+                }, 2000);
+                
+                card_count = null;
+            }
+            
             setTimeout(() => { ws.send(getFrame()); }, 1);
         }
     </script>

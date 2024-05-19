@@ -1,16 +1,10 @@
 from ultralytics import YOLO
 
-
-
-# Build a YOLOv9c model from scratch
-model = YOLO('yolov9c.yaml')
-
 # Build a YOLOv9c model from pretrained weight
-model = YOLO('yolov9c.pt')
+model = YOLO('yolov8s.pt')
 
 # Display model information (optional)
 model.info()
 
-
 # Train the model for 100 epochs
-results = model.train(data='blackjack.yaml', epochs=30, imgsz=640, verbose=True, batch=-1)
+results = model.train(data='/home/mihkuno/Desktop/datasets/data.yaml', epochs=20, imgsz=1280, verbose=True, batch=4)

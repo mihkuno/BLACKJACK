@@ -1,19 +1,23 @@
 task: detect
 mode: train
-model: yolov9c.pt
-data: blackjack.yaml
-epochs: 30
+model: yolov8s.pt
+data: /home/justeengg/app/datasets/data.yaml
+epochs: 100
 time: null
 patience: 100
-batch: -1
-imgsz: 640
+batch: 12
+imgsz: 2000
 save: true
 save_period: -1
 cache: false
-device: null
-workers: 8
+device:
+- 0
+- 1
+- 2
+- 3
+workers: 46
 project: null
-name: train3
+name: train
 exist_ok: false
 pretrained: true
 optimizer: auto
@@ -94,6 +98,7 @@ shear: 0.0
 perspective: 0.0
 flipud: 0.0
 fliplr: 0.5
+bgr: 0.0
 mosaic: 1.0
 mixup: 0.0
 copy_paste: 0.0
@@ -102,4 +107,4 @@ erasing: 0.4
 crop_fraction: 1.0
 cfg: null
 tracker: botsort.yaml
-save_dir: runs/detect/train3
+save_dir: /home/justeengg/app/runs/detect/train

@@ -2,14 +2,9 @@ import cv2
 import base64
 import numpy as np
 import json
-    
-import time
 from ultralytics import YOLO
 
-
-model = YOLO('./runs/detect/train/weights/best.pt')
-
-
+card_model = YOLO('./runs/detect/blackjack-cardname/weights/best.pt')
 
 def from_b64(uri):
     '''
@@ -35,26 +30,32 @@ def to_b64(img):
 
 
 def detect(img):
-    global model
+    global card_model, corner_model, orientation_model, orientation_names
 
     cards = []
     
     try:
-        img = from_b64(img)
-        results = model.predict(img, conf=0.75)
         
-        for r in results:
+        # get the converted image from the b64 uri
+        img = from_b64(img)
+                
+        # get whole card detection results
+        result_card = card_model.track(img, conf=0.6, tracker="bytetrack.yaml", persist=True)
+        
+        
+        for r in result_card:
             for box in r.boxes:
-
-                b = box.xyxy[0]  # get box coordinates in (left, top, right, bottom) format
-                c = box.cls      # class index
+                id = box.id.item()
+                b = box.xyxy[0]                         # get box coordinates in (left, top, right, bottom) format
+                c = box.cls                             # class index
                 confidence = round(float(box.conf), 2)  # confidence score
-                
                 left, top, right, bottom = map(int, b.tolist())  # Convert numpy scalars to Python integers
-                card = model.names[int(c)] # class name
                 
-                cards.append((left, top, right, bottom, card, confidence))
+                print(id)
                 
+                card = card_model.names[int(c)] # class name
+                cards.append((left, top, right, bottom, card, confidence, id))
+        
     except:
         print('No image found.')
     

@@ -16,94 +16,115 @@
             background-color: #1d1d1d1d;
             padding: 50;
         }
+        .grid-container {
+            width: 450px;
+            display: flex;
+            flex-wrap: wrap;
+            position: absolute;
+            right: 20;
+            top: 50;
+        }
+        .grid-item-remaining {
+            width: 25px;
+            margin: 2px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 1px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .grid-item-tracked {
+            width: 25px;
+            margin: 2px;
+            box-sizing: border-box;
+            border: 1px solid rgba(70, 70, 70, 1);
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: rgba(70, 70, 70, 0.5);
+            padding: 1px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        #grid-remain-text {
+            position: absolute;
+            font-size: 20;
+            right: 35;
+            top: 20;
+            color: white;
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #running-count-text {
+            position: absolute;
+            font-size: 20;
+            right: 295;
+            top: 20;
+            color: white;
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+        }
     </style>
 </head>
 <body>
     
     <div>
+
+        <span id="grid-remain-text">Cards Remaining</span>
+        <div class="grid-container" id="grid-container"></div>
+
+        <span id="running-count-text">Running Count : 0</span>
+
         <div id="detection-container">
             <video id="stream" autoplay width="100%" height="100%"></video>
         </div>
-        <div id="left-info">
-            <h1 id="card-stack">Card Stack: []</h1>
-            <h1 id="card-count">Card Count: 0 </h1>
-            <h1 id="card-result"></h1>
-            <button onclick="reset()" style="padding: 15 80 15 80; font-size: 14; width: 100%; border-radius: 50px;">Reset</button>
-        </div>
+
     </div>
     
 
     <script>
-        
-        var values = {
-            "C10": -2,
-            "D10": -2,
-            "H10": -2,
-            "S10": -2,
-            "C2": 1,
-            "D2": 1,
-            "H2": 1,
-            "S2": 1,
-            "C3": 1,
-            "D3": 1,
-            "H3": 1,
-            "S3": 1,
-            "C4": 2,
-            "D4": 2,
-            "H4": 2,
-            "S4": 2,
-            "C5": 2,
-            "D5": 2,
-            "H5": 2,
-            "S5": 2,
-            "C6": 2,
-            "D6": 2,
-            "H6": 2,
-            "S6": 2,
-            "C7": 1,
-            "D7": 1,
-            "H7": 1,
-            "S7": 1,
-            "C8": 0,
-            "D8": 0,
-            "H8": 0,
-            "S8": 0,
-            "C9": -1,
-            "D9": -1,
-            "H9": -1,
-            "S9": -1,
-            "CA": -2,
-            "DA": -2,
-            "HA": -2,
-            "SA": -2,
-            "CJ": -2,
-            "DJ": -2,
-            "HJ": -2,
-            "SJ": -2,
-            "CK": -2,
-            "DK": -2,
-            "HK": -2,
-            "SK": -2,
-            "CQ": -2,
-            "DQ": -2,
-            "HQ": -2,
-            "SQ": -2
+        var deck_cards = [
+            '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D', 
+            '3H', '3S', '4C', '4D', '4H', '4S', '5C', '5D', '5H', '5S', '6C', 
+            '6D', '6H', '6S', '7C', '7D', '7H', '7S', '8C', '8D', '8H', '8S', 
+            '9C', '9D', '9H', '9S', 'AC', 'AD', 'AH', 'AS', 'JC', 'JD', 'JH', 
+            'JS', 'KC', 'KD', 'KH', 'KS', 'QC', 'QD', 'QH', 'QS'
+        ];
+        var card_values = {
+            '10C': -2, '10D': -2, '10H': -2, '10S': -2,
+            '2C': 1, '2D': 1, '2H': 1, '2S': 1,
+            '3C': 1, '3D': 1, '3H': 1, '3S': 1,
+            '4C': 2, '4D': 2, '4H': 2, '4S': 2,
+            '5C': 2, '5D': 2, '5H': 2, '5S': 2,
+            '6C': 2, '6D': 2, '6H': 2, '6S': 2,
+            '7C': 1, '7D': 1, '7H': 1, '7S': 1,
+            '8C': 0, '8D': 0, '8H': 0, '8S': 0,
+            '9C': -1, '9D': -1, '9H': -1, '9S': -1,
+            'AC': -2, 'AD': -2, 'AH': -2, 'AS': -2,
+            'JC': -2, 'JD': -2, 'JH': -2, 'JS': -2,
+            'KC': -2, 'KD': -2, 'KH': -2, 'KS': -2,
+            'QC': -2, 'QD': -2, 'QH': -2, 'QS': -2
         }
-        
-        var card_stack_element = document.getElementById('card-stack');
-        var card_count_element = document.getElementById('card-count');
-        var card_result_element = document.getElementById('card-result');
+        // var   deck_count   = window.prompt("How many decks do you want to use?");
 
-        var card_stack = [];
-        var card_count = 0;
+        var deck_count = 1;
 
-        function reset() {
-            card_stack = []; 
-            card_count = 0;
-            
-            card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
-            card_count_element.innerHTML = `Card Count: ${card_count}`;
+        for (let i = 0; i < deck_count; i++) {
+            deck_cards = deck_cards.concat(deck_cards);
         }
+
+        const container = document.getElementById('grid-container');
+
+        deck_cards.forEach(str => {
+            const item = document.createElement('div');
+            item.className = 'grid-item-remaining';
+            item.textContent = str;
+            item.detectId = -1;
+            container.appendChild(item);
+        });
+
 
         // get video dom element
         var stream = document.getElementById('stream');
@@ -122,12 +143,10 @@
         }
         
         // Change this if you serve on different server or port
-        const WS_URL = 'ws://localhost:8000/ws'
-        // const WS_URL = 'wss://2217o5b2zh9g6g-8000.proxy.runpod.net/ws'; 
-        const FPS = 30;
+        // const WS_URL = 'ws://localhost:8000/ws'
+        const WS_URL = 'wss://2217o5b2zh9g6g-8000.proxy.runpod.net/ws'; 
+
         const ws = new WebSocket(WS_URL);
-
-
 
         ws.onopen = () => {
             console.log(`Connected to ${WS_URL}`);
@@ -148,18 +167,9 @@
             const detections = JSON.parse(message.data);
 
             detections.forEach((detection) => {
-                const [x1, y1, x2, y2, name, score] = detection;
-                
-                if (card_count !== null && !card_stack.includes(name)) {
+                const [x1, y1, x2, y2, name, score, id] = detection;
 
-                    const card_value = values[name];
-                    card_count += card_value; 
-                    card_stack.push(name);
-
-                    card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
-                    card_count_element.innerHTML = `Card Count: ${card_count}`;
-                }
-
+                // handling the output bounding boxes                
                 // create a div element
                 var div = document.createElement('div');
                 
@@ -169,60 +179,39 @@
                 div.style.top = `${y1}px`;
                 div.style.width = `${x2 - x1}px`;
                 div.style.height = `${y2 - y1}px`;
-                div.style.border = '3px solid #a29bfe';
-                div.style.backgroundColor = '#a29bfe';
-                div.style.color = 'white';
+                div.style.border = '4px solid #a29bfe';
+                div.style.color = 'black';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'center';
+                div.style.alignItems = 'center';
                 div.style.textAlign = 'center';
-                div.style.fontSize = '8px';
+                div.style.fontSize = '20px';
                 div.style.fontWeight = 'bold';
-                div.style.fontFamily = 'segoe ui';
-                div.innerHTML = `${name} ${score * 100}%`;
+                div.style.fontFamily = 'arial';
+                div.style.backgroundColor = 'rgba(162,155,254, 0.4)';
+                div.innerHTML = `${name} <br> ${score * 100}% <br> ${id}`;
 
                 // append div to detection_container
                 detection_container.appendChild(div);
+
+
+                // handling the count of cards                
+                for (item of container.childNodes) {
+                    if (item.textContent == name && item.detectId == id) {
+                        break;
+                    }
+                    else if (item.textContent == name && item.detectId == -1) {
+                        item.detectId = id;
+                        item.className = 'grid-item-tracked';
+
+                        const running_count = document.getElementById('running-count-text');
+                        const running_value = parseInt(running_count.textContent.split(' : ')[1]) + parseInt(card_values[name]);
+                        running_count.textContent = 'Running Count : ' + running_value.toString();
+                        break;
+                    }   
+                }
             });
 
-
-            if (card_count !== null && card_count == 21) {
-                card_result_element.innerHTML = "Blackjack!";
-                card_result_element.style.display = 'block';
-                card_result_element.style.color = 'green';
-                card_count_element.style.display = 'none';
-                card_stack_element.style.display = 'none';
-                
-                setTimeout(() => {
-                    card_stack = []; 
-                    card_count = 0; 
-                    card_count_element.innerHTML = `Card Count: ${card_count}`;
-                    card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
-                    card_count_element.style.display = 'block';
-                    card_stack_element.style.display = 'block';
-                    card_result_element.style.display = 'none';
-                }, 2000);
-                
-                card_count = null;
-            } 
-
-            else if (card_count !== null && card_count > 21) {
-                card_result_element.innerHTML = "Bust!";
-                card_result_element.style.display = 'block';
-                card_result_element.style.color = 'red';
-                card_count_element.style.display = 'none';
-                card_stack_element.style.display = 'none';
-
-                setTimeout(() => {
-                    card_stack = []; 
-                    card_count = 0; 
-                    card_count_element.innerHTML = `Card Count: ${card_count}`;
-                    card_stack_element.innerHTML = `Card Stack: [${card_stack}]`;
-                    card_count_element.style.display = 'block';
-                    card_stack_element.style.display = 'block';
-                    card_result_element.style.display = 'none';
-                }, 2000);
-                
-                card_count = null;
-            }
-            
             setTimeout(() => { ws.send(getFrame()); }, 1);
         }
     </script>

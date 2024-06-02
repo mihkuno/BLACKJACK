@@ -17,7 +17,7 @@
             padding: 50;
         }
         .grid-container {
-            width: 450px;
+            width: 400px;
             display: flex;
             flex-wrap: wrap;
             position: absolute;
@@ -71,6 +71,7 @@
 <body>
     
     <div>
+        <select id="videoSource" style="position: absolute; padding: 1px;"></select>
 
         <span id="grid-remain-text">Cards Remaining</span>
         <div class="grid-container" id="grid-container"></div>
@@ -78,142 +79,12 @@
         <span id="running-count-text">Running Count : 0</span>
 
         <div id="detection-container">
-            <video id="stream" autoplay width="100%" height="100%"></video>
+            <!-- <video id="stream" autoplay muted src="video2.mp4"></video> -->
+            <video id="stream" autoplay width="100%"></video>
+            <!-- <img id="stream" src="final.png"> -->
         </div>
 
     </div>
-    
-
-    <script>
-        var deck_cards = [
-            '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D', 
-            '3H', '3S', '4C', '4D', '4H', '4S', '5C', '5D', '5H', '5S', '6C', 
-            '6D', '6H', '6S', '7C', '7D', '7H', '7S', '8C', '8D', '8H', '8S', 
-            '9C', '9D', '9H', '9S', 'AC', 'AD', 'AH', 'AS', 'JC', 'JD', 'JH', 
-            'JS', 'KC', 'KD', 'KH', 'KS', 'QC', 'QD', 'QH', 'QS'
-        ];
-        var card_values = {
-            '10C': -2, '10D': -2, '10H': -2, '10S': -2,
-            '2C': 1, '2D': 1, '2H': 1, '2S': 1,
-            '3C': 1, '3D': 1, '3H': 1, '3S': 1,
-            '4C': 2, '4D': 2, '4H': 2, '4S': 2,
-            '5C': 2, '5D': 2, '5H': 2, '5S': 2,
-            '6C': 2, '6D': 2, '6H': 2, '6S': 2,
-            '7C': 1, '7D': 1, '7H': 1, '7S': 1,
-            '8C': 0, '8D': 0, '8H': 0, '8S': 0,
-            '9C': -1, '9D': -1, '9H': -1, '9S': -1,
-            'AC': -2, 'AD': -2, 'AH': -2, 'AS': -2,
-            'JC': -2, 'JD': -2, 'JH': -2, 'JS': -2,
-            'KC': -2, 'KD': -2, 'KH': -2, 'KS': -2,
-            'QC': -2, 'QD': -2, 'QH': -2, 'QS': -2
-        }
-        // var   deck_count   = window.prompt("How many decks do you want to use?");
-
-        var deck_count = 1;
-
-        for (let i = 0; i < deck_count; i++) {
-            deck_cards = deck_cards.concat(deck_cards);
-        }
-
-        const container = document.getElementById('grid-container');
-
-        deck_cards.forEach(str => {
-            const item = document.createElement('div');
-            item.className = 'grid-item-remaining';
-            item.textContent = str;
-            item.detectId = -1;
-            container.appendChild(item);
-        });
-
-
-        // get video dom element
-        var stream = document.getElementById('stream');
-
-        // request access to webcam
-        navigator.mediaDevices.getUserMedia({video: {width: stream.offsetWidth, height: stream.offsetHeight}}).then((frame) => stream.srcObject = frame);
-        
-        // returns a frame encoded in base64
-        const getFrame = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = stream.offsetWidth;
-            canvas.height = stream.offsetHeight;
-            canvas.getContext('2d').drawImage(stream, 0, 0);
-            const data = canvas.toDataURL('image/png');
-            return data;
-        }
-        
-        // Change this if you serve on different server or port
-        // const WS_URL = 'ws://localhost:8000/ws'
-        const WS_URL = 'wss://2217o5b2zh9g6g-8000.proxy.runpod.net/ws'; 
-
-        const ws = new WebSocket(WS_URL);
-
-        ws.onopen = () => {
-            console.log(`Connected to ${WS_URL}`);
-            
-            ws.send(getFrame());
-        }
-
-        ws.onmessage = message => {
-
-            const detection_container = document.getElementById('detection-container');
-            // Select all div elements within the parent div
-            var divsToRemove = detection_container.querySelectorAll("div");
-            // Iterate over the div elements and remove them
-            divsToRemove.forEach(function(div) {
-                div.remove();
-            });
-
-            const detections = JSON.parse(message.data);
-
-            detections.forEach((detection) => {
-                const [x1, y1, x2, y2, name, score, id] = detection;
-
-                // handling the output bounding boxes                
-                // create a div element
-                var div = document.createElement('div');
-                
-                // set div style
-                div.style.position = 'absolute';
-                div.style.left = `${x1}px`;
-                div.style.top = `${y1}px`;
-                div.style.width = `${x2 - x1}px`;
-                div.style.height = `${y2 - y1}px`;
-                div.style.border = '4px solid #a29bfe';
-                div.style.color = 'black';
-                div.style.display = 'flex';
-                div.style.justifyContent = 'center';
-                div.style.alignItems = 'center';
-                div.style.textAlign = 'center';
-                div.style.fontSize = '20px';
-                div.style.fontWeight = 'bold';
-                div.style.fontFamily = 'arial';
-                div.style.backgroundColor = 'rgba(162,155,254, 0.4)';
-                div.innerHTML = `${name} <br> ${score * 100}% <br> ${id}`;
-
-                // append div to detection_container
-                detection_container.appendChild(div);
-
-
-                // handling the count of cards                
-                for (item of container.childNodes) {
-                    if (item.textContent == name && item.detectId == id) {
-                        break;
-                    }
-                    else if (item.textContent == name && item.detectId == -1) {
-                        item.detectId = id;
-                        item.className = 'grid-item-tracked';
-
-                        const running_count = document.getElementById('running-count-text');
-                        const running_value = parseInt(running_count.textContent.split(' : ')[1]) + parseInt(card_values[name]);
-                        running_count.textContent = 'Running Count : ' + running_value.toString();
-                        break;
-                    }   
-                }
-            });
-
-            setTimeout(() => { ws.send(getFrame()); }, 1);
-        }
-    </script>
+    <script src="script.js" type="module"></script>
 </body>
 </html>

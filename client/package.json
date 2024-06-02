@@ -17,5 +17,8 @@
     "type": "git",
     "url": "git+https://github.com/mihkuno/BLACKJACK"
   },
-  "author": "Joeninyo Cainday"
+  "author": "Joeninyo Cainday",
+  "dependencies": {
+    "density-clustering": "^1.3.0"
+  }
 }

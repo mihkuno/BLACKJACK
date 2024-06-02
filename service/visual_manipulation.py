@@ -4,7 +4,8 @@ import numpy as np
 import json
 from ultralytics import YOLO
 
-card_model = YOLO('./runs/detect/blackjack-cardname/weights/best.pt')
+# card_model = YOLO('./runs/detect/blackjack-cardname/weights/best.pt')
+card_model = YOLO('/home/mihkuno/Desktop/PLAYCARD-main/runs/detect/blackjack-model-final/weights/best.pt')   
 
 def from_b64(uri):
     '''
@@ -40,7 +41,7 @@ def detect(img):
         img = from_b64(img)
                 
         # get whole card detection results
-        result_card = card_model.track(img, conf=0.6, tracker="bytetrack.yaml", persist=True)
+        result_card = card_model.track(img, conf=0.65, persist=True, tracker="botsort.yaml")
         
         
         for r in result_card:

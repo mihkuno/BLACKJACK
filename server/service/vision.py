@@ -4,8 +4,7 @@ import numpy as np
 import json
 from ultralytics import YOLO
 
-# card_model = YOLO('./runs/detect/blackjack-cardname/weights/best.pt')
-card_model = YOLO('./runs/detect/blackjack-model-final/weights/best.pt')   
+card_model = YOLO('./model/detect/blackjack-model-final/weights/best.pt')   
 
 def from_b64(uri):
     '''

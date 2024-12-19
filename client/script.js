@@ -243,8 +243,8 @@ const getFrame = () => {
 }
 
 // Change this if you serve on different server or port
-// const WS_URL = 'ws://localhost:8000/ws'
-const WS_URL = 'wss://2217o5b2zh9g6g-8000.proxy.runpod.net/ws'; 
+const WS_URL = 'ws://localhost:8000/ws'
+// const WS_URL = 'wss://2217o5b2zh9g6g-8000.proxy.runpod.net/ws'; 
 
 const ws = new WebSocket(WS_URL);
 

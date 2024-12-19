@@ -2,18 +2,13 @@ from fastapi import FastAPI
 from starlette.responses import FileResponse 
 from starlette.websockets import WebSocket
 
-from service.visual_manipulation import detect, from_b64
+from service.vision import detect, from_b64
 
 app = FastAPI()
 
-@app.get("/")
-async def index_endpoint():
-    return FileResponse('client/index.html')
-
-
-@app.get("/hello")
+@app.get("/test")
 async def test_endpoint():
-    return {"message": "Hello World"}
+    return {"message": "Test is working!"}
 
 
 @app.websocket("/ws")
